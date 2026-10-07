@@ -1,3 +1,226 @@
+# Git Workflow
+
+## 1. Mục tiêu
+
+Tài liệu này quy định cách nhóm làm việc với Git và GitHub trong dự án Financial-Management.
+
+Nhóm sử dụng mô hình:
+
+~~~text
+main
+└── develop
+    ├── Hoa
+    ├── Dang
+    ├── Chi
+    ├── An
+    ├── Dan
+    └── Khoa
+~~~
+
+Mỗi thành viên sử dụng một branch cá nhân xuyên suốt dự án. Không tạo branch mới theo từng sprint.
+
+## 2. Quy tắc branch
+
+### main
+
+- Chứa phiên bản ổn định để demo hoặc phát hành.
+- Không push trực tiếp.
+- Chỉ nhận code từ develop thông qua Pull Request.
+- Có thể tạo tag sau mỗi sprint, ví dụ sprint-1, sprint-2.
+
+### develop
+
+- Là branch tích hợp chung của cả nhóm.
+- Chứa các tính năng đã được review và merge từ branch thành viên.
+- Không push trực tiếp.
+- Là branch đích của các Pull Request cá nhân.
+
+### Branch thành viên
+
+Tên branch sử dụng:
+
+~~~text
+Hoa
+Dang
+Chi
+An
+Dan
+Khoa
+~~~
+
+Quy tắc:
+
+- Mỗi branch có một thành viên phụ trách chính.
+- Chỉ dùng branch để phát triển các task được phân công cho thành viên đó.
+- Không tự ý push vào branch của thành viên khác.
+- Branch phải thường xuyên cập nhật từ develop.
+- Sau khi merge vào develop, branch cá nhân vẫn được giữ lại để tiếp tục dùng ở sprint tiếp theo.
+
+
+## 3. Clone project và lấy branch
+
+Clone repository lần đầu:
+
+~~~bash
+git clone https://github.com/lthnoname/Financial-Management.git
+cd Financial-Management
+~~~
+
+Lấy danh sách branch mới nhất:
+
+~~~bash
+git fetch origin
+~~~
+
+Chuyển sang branch cá nhân, ví dụ TV1:
+
+~~~bash
+git switch --track origin/TV1
+~~~
+
+Nếu branch cá nhân chưa tồn tại trên GitHub:
+
+~~~bash
+git switch develop
+git pull origin develop
+git switch -c tv1
+git push -u origin tv1
+~~~
+
+## 4. Cập nhật branch trước khi làm việc
+
+Vì branch cá nhân được sử dụng xuyên suốt nhiều sprint, cần cập nhật từ develop thường xuyên.
+
+~~~bash
+git switch tv1
+git fetch origin
+git merge origin/develop
+~~~
+
+Nên cập nhật ít nhất một lần trước khi bắt đầu task mới và trước khi mở Pull Request.
+
+Không cập nhật develop khi đang có thay đổi chưa commit. Hãy commit hoặc tạm lưu thay đổi trước:
+
+~~~bash
+git add .
+git commit -m "wip: save current progress"
+~~~
+
+## 5. Quy tắc commit
+
+Mỗi commit nên có một mục đích rõ ràng và không nên gom quá nhiều task không liên quan.
+
+Định dạng:
+
+~~~text
+type(scope): mô tả ngắn
+~~~
+
+Các loại commit thường dùng:
+
+| Type | Sử dụng cho |
+|---|---|
+| feat | Thêm tính năng mới |
+| fix | Sửa lỗi |
+| docs | Cập nhật tài liệu |
+| test | Thêm hoặc sửa test |
+| refactor | Cải thiện code nhưng không đổi chức năng |
+| chore | Cấu hình, Docker, CI/CD hoặc công việc kỹ thuật |
+
+Ví dụ:
+
+~~~bash
+git commit -m "feat(auth): add login endpoint"
+git commit -m "feat(mobile): add transaction form"
+git commit -m "fix(database): correct transaction relation"
+git commit -m "test(auth): add login api test"
+git commit -m "docs: update local setup guide"
+git commit -m "chore(ci): configure backend workflow"
+~~~
+
+Không nên dùng các message quá chung chung:
+
+~~~text
+update
+fix code
+done
+change
+~~~
+
+Không commit thông tin nhạy cảm như mật khẩu, API key, token hoặc file .env có dữ liệu thật.
+
+## 6. Quy trình add, commit và push
+
+Kiểm tra branch hiện tại:
+
+~~~bash
+git branch --show-current
+~~~
+
+Kiểm tra các file đã thay đổi:
+
+~~~bash
+git status
+~~~
+
+Thêm file cần commit:
+
+~~~bash
+git add .
+~~~
+
+Nên kiểm tra lại trước khi commit:
+
+~~~bash
+git diff --cached
+~~~
+
+Tạo commit:
+
+~~~bash
+git commit -m "feat(scope): describe the change"
+~~~
+
+Đẩy code lên branch cá nhân:
+
+~~~bash
+git push
+~~~
+
+Lần đầu push branch mới cần dùng:
+
+~~~bash
+git push -u origin member/tv1
+~~~
+
+## 7. Pull Request
+
+Mọi thay đổi đưa vào develop phải thông qua Pull Request.
+
+### Tạo Pull Request
+
+Trên GitHub, chọn:
+
+~~~text
+base: develop
+compare: member/tv1
+~~~
+
+Không chọn main cho Pull Request thông thường.
+
+### Tiêu đề Pull Request
+
+Nên ghi rõ sprint, thành viên và nội dung:
+
+~~~text
+[S1][TV1] Initialize project skeleton
+[S2][TV4] Implement authentication API
+[S3][TV3] Add transaction history screen
+~~~
+
+### Nội dung Pull Request
+
+Mỗi Pull Request nên có:
 
 - Mô tả chức năng đã thực hiện.
 - Danh sách task hoặc yêu cầu liên quan.
