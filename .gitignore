@@ -1,0 +1,87 @@
+# ==========================================
+# Operating System Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# ==========================================
+# IDE & Editor Files
+# ==========================================
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.history
+.sublime-project
+.sublime-workspace
+
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+*.env
+*.env.local
+*.env.*.local
+*.key
+*.pem
+*.jks
+*.keystore
+
+# ==========================================
+# Logs & Temporary Files
+# ==========================================
+*.log
+*.tmp
+*.bak
+logs/
+tmp/
+
+# ==========================================
+# Backend (Java / Maven / Spring Boot)
+# ==========================================
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+
+# ==========================================
+# Mobile (Flutter / Dart)
+# ==========================================
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+**/.widget_preview/
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/*.class
+**/app.*.symbols
+**/app.*.map.json
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/ephemeral/
+**/ios/Pods/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
