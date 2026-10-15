@@ -1,0 +1,28 @@
+#Build output
+target/
+#IDE files
+.idea/
+.vscode/
+*.iml
+#Git
+.git/
+.gitignore
+.gitattributes
+#Documentation
+*.md
+!README.md
+#Logs
+*.log
+logs/
+#OS files
+.DS_Store
+Thumbs.db
+#Test file
+src/test/
+#Environment
+.env
+.env.*
+!.env.example
+#Docker files
+docker-compose*.yml
+Dockerfile
