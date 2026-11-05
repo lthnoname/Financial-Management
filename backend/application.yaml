@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/finance_db
-    username: admin
-    password: local_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/financial_management}
+    username: ${SPRING_DATASOURCE_USERNAME:financial_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
   jpa:
     hibernate:
       ddl-auto: none

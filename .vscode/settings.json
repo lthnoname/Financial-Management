@@ -1,3 +1,5 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "cmake.sourceDirectory": "H:/CNPM-Chuyen-Sau/Financial-Management/mobile/windows",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
