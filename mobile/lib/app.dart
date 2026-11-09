@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'core/routing/routing.dart';
-import 'core/theme/theme.dart';
+import 'features/dashboard/dashboard_screen.dart';
 
 class FinanceApp extends StatelessWidget {
   const FinanceApp({super.key});
@@ -10,7 +11,7 @@ class FinanceApp extends StatelessWidget {
     return MaterialApp(
       title: 'Financial Management',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: pocketTheme(),
       initialRoute: AppRoutes.dashboard,
       routes: AppRouter.routes,
       onGenerateRoute: AppRouter.onGenerateRoute,
