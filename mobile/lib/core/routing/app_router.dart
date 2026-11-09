@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/dashboard/dashboard_screen.dart';
 import '../../shared/widgets/app_error_view.dart';
 import 'app_routes.dart';
 
@@ -9,6 +10,7 @@ class AppRouter {
   static Map<String, WidgetBuilder> get routes => {
         AppRoutes.root: (_) => const LoginScreen(),
         AppRoutes.login: (_) => const LoginScreen(),
+        AppRoutes.dashboard: (_) => const DashboardScreen(),
       };
 
   static List<Route<dynamic>> onGenerateInitialRoutes(String initialRoute) {

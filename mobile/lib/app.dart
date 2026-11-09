@@ -11,7 +11,7 @@ class FinanceApp extends StatelessWidget {
       title: 'Financial Management',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppRoutes.login,
+      initialRoute: AppRoutes.dashboard,
       routes: AppRouter.routes,
       onGenerateRoute: AppRouter.onGenerateRoute,
       onGenerateInitialRoutes: AppRouter.onGenerateInitialRoutes,
