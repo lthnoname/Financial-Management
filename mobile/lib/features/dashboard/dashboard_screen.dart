@@ -662,6 +662,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       );
       if (wide)
+      {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -670,6 +671,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(flex: 4, child: right),
           ],
         );
+      }
       return Column(children: [left, const SizedBox(height: 20), right]);
     },
   );
@@ -1360,6 +1362,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
       if (box.maxWidth > 750)
+      {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1368,6 +1371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(child: detail),
           ],
         );
+      }
       return Column(
         children: [_budgetSummary(), const SizedBox(height: 20), detail],
       );
@@ -1652,8 +1656,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
     if (saved == true && mounted)
+    {
       setState(() {
         if (entry == null)
+        {
           entries.add(
             MoneyEntry(
               title: title.text.trim(),
@@ -1666,6 +1672,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               note: note.text.trim(),
             ),
           );
+        }
         else {
           entry.title = title.text.trim();
           entry.amount = double.parse(
@@ -1676,6 +1683,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           entry.note = note.text.trim();
         }
       });
+    }
   }
 
   Future<void> _addCategory() async {
@@ -1702,7 +1710,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
     if (result != null && result.isNotEmpty && !categories.contains(result))
+    {
       setState(() => categories.add(result));
+    }
   }
 
   IconData _icon(String name) => switch (name) {
