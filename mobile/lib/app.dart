@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'core/routing/routing.dart';
 import 'features/dashboard/dashboard_screen.dart';
