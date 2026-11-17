@@ -1,8 +1,9 @@
-package com.example.backend.transaction;
+package com.example.backend.transaction.repository;
 
+import com.example.backend.transaction.entity.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TransactionRepository extends JpaRepository<Transaction,Integer> {
+public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
 }
