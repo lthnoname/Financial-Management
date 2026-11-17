@@ -9,7 +9,7 @@
   - **Tiền tệ (`amount`, `limit_amount`, `opening_balance`)**: Bắt buộc dùng `NUMERIC(15, 2)` để tránh sai số dấu phẩy động (`FR-08`).
   - **Cô lập dữ liệu (`NFR-02`)**: Mọi bảng dữ liệu nghiệp vụ đều gắn khóa ngoại `user_id` tham chiếu tới `users(id)`.
   - **Xóa mềm (`FR-10`)**: Bảng `transactions` dùng cột `is_deleted` (`BOOLEAN DEFAULT FALSE`) và `deleted_at` (`TIMESTAMP`), tuyệt đối không dùng lệnh `DELETE` vật lý.
-  - **Danh mục mặc định & cá nhân (`FR-12`, `FR-14`)**: Bảng `categories` dùng cờ `is_system` (`TRUE` cho danh mục mặc định của hệ thống, `user_id = NULL`) và `is_active` (`FALSE` khi vô hiệu hóa danh mục đã có giao dịch).
+  - **Danh mục mặc định & cá nhân (`FR-12`, `FR-14`)**: Mỗi tài khoản có bộ danh mục riêng. Cờ `is_system` bảo vệ danh mục mặc định và cờ `is_active` cho phép vô hiệu hóa danh mục cá nhân.
 
 ---
 
@@ -66,7 +66,7 @@ erDiagram
 
     categories {
         SERIAL id PK
-        INTEGER user_id FK "NULL nếu là danh mục hệ thống"
+        INTEGER user_id FK "Luôn thuộc một tài khoản"
         VARCHAR(100) name
         VARCHAR(20) type "INCOME | EXPENSE"
         BOOLEAN is_system "Default FALSE"
@@ -163,14 +163,14 @@ Khớp với Entity `com.example.backend.user.User`.
 | Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `id` | `SERIAL` | `PRIMARY KEY` | Khóa chính |
-| `user_id` | `INTEGER` | `NULLABLE`, `FK -> users(id) ON DELETE CASCADE` | `NULL` nếu là danh mục hệ thống; khác `NULL` nếu là danh mục cá nhân |
+| `user_id` | `INTEGER` | `NOT NULL`, `FK -> users(id)` | Chủ sở hữu danh mục mặc định hoặc cá nhân |
 | `name` | `VARCHAR(100)` | `NOT NULL` | Tên danh mục (không trùng trong cùng `user_id` và `type`) |
 | `type` | `VARCHAR(20)` | `NOT NULL`, `CHECK (type IN ('INCOME', 'EXPENSE'))` | Loại danh mục: Thu (`INCOME`) hoặc Chi (`EXPENSE`) |
 | `is_system` | `BOOLEAN` | `NOT NULL DEFAULT FALSE` | `TRUE`: Danh mục mặc định không cho phép user sửa/xóa (`FR-12`) |
 | `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Dùng để ẩn/vô hiệu hóa khi danh mục đã có giao dịch (`FR-14`) |
 | `created_at` | `TIMESTAMP` | `NOT NULL DEFAULT CURRENT_TIMESTAMP` | Thời điểm tạo |
 
-- **Ràng buộc duy nhất**: `UNIQUE (user_id, name, type)` (Tránh tạo trùng tên danh mục trong cùng tài khoản — `FR-13`).
+- **Ràng buộc duy nhất**: `(user_id, type, lower(btrim(name)))`. Cùng tài khoản và loại thu/chi, tên không được trùng khi bỏ khoảng trắng đầu/cuối và không phân biệt hoa thường.
 
 ---
 

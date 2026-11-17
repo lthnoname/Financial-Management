@@ -212,6 +212,7 @@ Tất cả lỗi trả về từ Backend (qua `GlobalExceptionHandler`) tuân th
 ### 4.2. Phân hệ Người dùng & Thiết lập — User (`FR-05`, `FR-26`, `FR-27`)
 
 - **Endpoint**: `GET /api/v1/me` & `PATCH /api/v1/me`
+- **Thiết lập ví (Sprint 2 / TV5)**: `PATCH` nhận từng trường `currency`, `timezone`, `openingBalance` và giữ giá trị của các trường bị bỏ qua. Mặc định là `VND`, `Asia/Saigon` và `0.00`. Giá trị tiền tệ, múi giờ hoặc số dư không hợp lệ trả về `422`.
 - **Auth**: Bearer
 - **Response `GET /api/v1/me` (`200 OK`)**:
   ```json
@@ -241,7 +242,7 @@ Tất cả lỗi trả về từ Backend (qua `GlobalExceptionHandler`) tuân th
 
 ### 4.3. Phân hệ Danh mục — Category (`FR-12`, `FR-13`, `FR-14`)
 
-- **`GET /api/v1/categories`** (Auth: Bearer): Lấy danh sách danh mục mặc định của hệ thống (`FR-12`) + danh mục cá nhân của người dùng.
+- **`GET /api/v1/categories`** (Auth: Bearer): Lấy danh mục mặc định và cá nhân của tài khoản hiện tại. Mỗi mục có `id`, `name`, `type`, `isSystem` và `isActive`. Khi chọn danh mục cho giao dịch mới, chỉ hiển thị mục có `isActive = true`.
 - **`POST /api/v1/categories`** (Auth: Bearer): Tạo danh mục cá nhân (`FR-13`).
   ```json
   {
@@ -249,7 +250,7 @@ Tất cả lỗi trả về từ Backend (qua `GlobalExceptionHandler`) tuân th
     "type": "EXPENSE"
   }
   ```
-  - Mã lỗi: `400` (tên rỗng/sai loại), `409` (trùng tên danh mục trong cùng tài khoản).
+    - Mã lỗi: `400` (tên rỗng/sai loại), `409` (trùng tên trong cùng tài khoản và loại thu/chi, không phân biệt hoa thường).
 - **`PATCH /api/v1/categories/{id}`** & **`DELETE /api/v1/categories/{id}`** (Auth: Bearer): Sửa tên/trạng thái `isActive` hoặc xóa danh mục cá nhân (`FR-14`).
   - Mã lỗi: `403` (cố sửa/xóa danh mục hệ thống hoặc của người khác), `409` (xóa danh mục đang được giao dịch sử dụng — gợi ý chuyển sang vô hiệu hóa `isActive = false`).
 
