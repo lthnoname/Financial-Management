@@ -21,6 +21,12 @@ public class Category {
     @Column(nullable = false, length = 20)
     private String type;
 
+    @Column(name = "is_system", nullable = false, updatable = false)
+    private boolean system;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
     public Category() {
     }
 
@@ -60,5 +66,17 @@ public class Category {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public boolean isSystem() {
+        return system;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
