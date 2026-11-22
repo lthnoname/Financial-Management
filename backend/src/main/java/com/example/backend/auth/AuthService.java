@@ -1,18 +1,20 @@
 package com.example.backend.auth;
 
-import com.example.backend.common.AuthException;
-import com.example.backend.user.User;
-import com.example.backend.user.UserRepository;
-
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.backend.common.AuthException;
+import com.example.backend.config.JwtService;
+import com.example.backend.user.User;
+import com.example.backend.user.UserRepository;
 
 @Service
 public class AuthService {
@@ -21,7 +23,10 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final OtpTokenRepository otpTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final long refreshTokenExpirationDays;
     private final SecureRandom secureRandom = new SecureRandom();
 
     private static final int MAX_OTP_ATTEMPTS = 5;
@@ -31,11 +36,18 @@ public class AuthService {
     public AuthService(
             UserRepository userRepository,
             OtpTokenRepository otpTokenRepository,
-            PasswordEncoder passwordEncoder
+            RefreshTokenRepository refreshTokenRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            @org.springframework.beans.factory.annotation.Value("${app.jwt.refresh-token-expiration-days:30}")
+            long refreshTokenExpirationDays
     ) {
         this.userRepository = userRepository;
         this.otpTokenRepository = otpTokenRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.refreshTokenExpirationDays = refreshTokenExpirationDays;
     }
 
     @Transactional
@@ -64,7 +76,7 @@ public class AuthService {
         );
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AuthException.class)
     public VerifyOtpResponse verifyOtp(VerifyOtpRequest request) {
         String identifier = normalizeIdentifier(request.identifier());
 
@@ -150,6 +162,69 @@ public class AuthService {
         otpTokenRepository.save(token);
 
         return new MessageResponse("Đặt lại mật khẩu thành công.");
+    }
+
+    @Transactional
+    public LoginResponse login(LoginRequest request) {
+        String identifier = normalizeIdentifier(request.identifier());
+        User user = userRepository.findByIdentifier(identifier).orElseThrow(() ->
+                new AuthException(HttpStatus.UNAUTHORIZED, "Identifier hoặc mật khẩu không đúng")
+        );
+
+        if (Boolean.TRUE.equals(user.getVerificationRequired())) {
+            throw new AuthException(HttpStatus.UNAUTHORIZED, "Tài khoản chưa được xác thực OTP");
+        }
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new AuthException(HttpStatus.UNAUTHORIZED, "Identifier hoặc mật khẩu không đúng");
+        }
+
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshTokenValue = UUID.randomUUID() + UUID.randomUUID().toString();
+        refreshTokenRepository.save(new RefreshToken(
+                user,
+                refreshTokenValue,
+                LocalDateTime.now().plusDays(refreshTokenExpirationDays)
+        ));
+
+        return new LoginResponse(
+                accessToken,
+                refreshTokenValue,
+                new UserAuthResponse(user.getId(), user.getIdentifier(), user.getFullName())
+        );
+    }
+
+    @Transactional(noRollbackFor = AuthException.class)
+    public AccessTokenResponse refresh(RefreshRequest request) {
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByTokenAndRevokedFalse(request.refreshToken())
+                .orElseThrow(() -> new AuthException(
+                        HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ hoặc đã bị thu hồi"
+                ));
+
+        if (refreshToken.isExpired()) {
+            refreshToken.revoke();
+            refreshTokenRepository.save(refreshToken);
+            throw new AuthException(HttpStatus.UNAUTHORIZED, "Refresh token đã hết hạn");
+        }
+
+        return new AccessTokenResponse(jwtService.generateAccessToken(refreshToken.getUser()));
+    }
+
+    @Transactional
+    public void logout(RefreshRequest request, String authenticatedIdentifier) {
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByTokenAndRevokedFalse(request.refreshToken())
+                .orElseThrow(() -> new AuthException(
+                        HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ hoặc đã bị thu hồi"
+                ));
+
+        if (!refreshToken.getUser().getIdentifier().equals(authenticatedIdentifier)) {
+            throw new AuthException(HttpStatus.UNAUTHORIZED, "Refresh token không thuộc tài khoản đăng nhập");
+        }
+
+        refreshToken.revoke();
+        refreshTokenRepository.save(refreshToken);
     }
 
     private OtpToken createOtp(User user, OtpToken.Purpose purpose) {
