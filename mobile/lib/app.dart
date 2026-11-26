@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'core/routing/routing.dart';
 import 'features/dashboard/dashboard_screen.dart';
 
 class FinanceApp extends StatelessWidget {
-  const FinanceApp({super.key});
+  final String? initialRoute;
+
+  const FinanceApp({super.key, this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +14,7 @@ class FinanceApp extends StatelessWidget {
       title: 'Financial Management',
       debugShowCheckedModeBanner: false,
       theme: pocketTheme(),
-      initialRoute: AppRoutes.login,
+      initialRoute: initialRoute ?? AppRoutes.dashboard,
       routes: AppRouter.routes,
       onGenerateRoute: AppRouter.onGenerateRoute,
       onGenerateInitialRoutes: AppRouter.onGenerateInitialRoutes,
