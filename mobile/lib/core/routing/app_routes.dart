@@ -11,6 +11,10 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
 
+  // System states (FR-28)
+  static const String loading = '/loading';
+  static const String error = '/error';
+
   // Main app routes
   static const String dashboard = '/dashboard';
   static const String transactions = '/transactions';
