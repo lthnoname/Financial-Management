@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 const ink = Color(0xFF15243B);
@@ -1533,13 +1534,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Transaction editor and category dialog are retained below.
   Future<void> _showEntryForm({MoneyEntry? entry}) async {
+    final formKey = GlobalKey<FormState>();
     final title = TextEditingController(text: entry?.title ?? '');
     final amount = TextEditingController(
       text: entry == null ? '' : entry.amount.toStringAsFixed(0),
     );
     final note = TextEditingController(text: entry?.note ?? '');
     var type = entry?.type ?? FlowType.expense;
-    var category = entry?.category ?? categories.first;
+    List<String> categoriesForType() => categories
+        .where(
+          (value) =>
+              type == FlowType.income ? value == 'Lương' : value != 'Lương',
+        )
+        .toList();
+
+    String? category = entry?.category;
+    final initialCategories = categoriesForType();
+    if (category == null || !initialCategories.contains(category)) {
+      category = initialCategories.isEmpty ? null : initialCategories.first;
+    }
+    var date = entry?.date ?? DateTime.now();
+
+    double? parseAmount(String value) {
+      final parsed = int.tryParse(value);
+      if (parsed == null || parsed <= 0) return null;
+      return parsed.toDouble();
+    }
+
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -1568,59 +1589,140 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SegmentedButton<FlowType>(
-                  segments: const [
-                    ButtonSegment(
-                      value: FlowType.expense,
-                      label: Text('Chi tiêu'),
-                      icon: Icon(Icons.north_east),
-                    ),
-                    ButtonSegment(
-                      value: FlowType.income,
-                      label: Text('Thu nhập'),
-                      icon: Icon(Icons.south_west),
-                    ),
-                  ],
-                  selected: {type},
-                  onSelectionChanged: (v) => refresh(() {
-                    type = v.first;
-                    category = type == FlowType.income
-                        ? (categories.contains('Lương')
-                              ? 'Lương'
-                              : categories.first)
-                        : categories.first;
-                  }),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: title,
-                  decoration: const InputDecoration(labelText: 'Tên giao dịch'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: amount,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Số tiền (VND)'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  key: ValueKey(category),
-                  initialValue: categories.contains(category)
-                      ? category
-                      : categories.first,
-                  decoration: const InputDecoration(labelText: 'Danh mục'),
-                  items: categories
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) refresh(() => category = v);
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: note,
-                  decoration: const InputDecoration(
-                    labelText: 'Ghi chú (không bắt buộc)',
+                Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SegmentedButton<FlowType>(
+                        segments: const [
+                          ButtonSegment(
+                            value: FlowType.expense,
+                            label: Text('Chi tiêu'),
+                            icon: Icon(Icons.north_east),
+                          ),
+                          ButtonSegment(
+                            value: FlowType.income,
+                            label: Text('Thu nhập'),
+                            icon: Icon(Icons.south_west),
+                          ),
+                        ],
+                        selected: {type},
+                        onSelectionChanged: (value) => refresh(() {
+                          type = value.first;
+                          final available = categoriesForType();
+                          category = available.isEmpty ? null : available.first;
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: title,
+                        decoration: const InputDecoration(
+                          labelText: 'Tên giao dịch',
+                        ),
+                        validator: (value) => value?.trim().isNotEmpty == true
+                            ? null
+                            : 'Vui lòng nhập tên giao dịch',
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: amount,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: false,
+                          signed: false,
+                        ),
+                        inputFormatters: [
+                          TextInputFormatter.withFunction(
+                            (oldValue, newValue) =>
+                                RegExp(r'^\d*$').hasMatch(newValue.text)
+                                ? newValue
+                                : oldValue,
+                          ),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Số tiền (VND)',
+                        ),
+                        validator: (value) {
+                          final parsed = parseAmount(value ?? '');
+                          if (parsed == null ||
+                              !parsed.isFinite ||
+                              parsed <= 0) {
+                            return 'Số tiền phải lớn hơn 0';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('$type-$category'),
+                        initialValue: category,
+                        decoration: const InputDecoration(
+                          labelText: 'Danh mục',
+                        ),
+                        items: categoriesForType()
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(),
+                        validator: (value) =>
+                            value == null ? 'Vui lòng chọn danh mục' : null,
+                        onChanged: (value) {
+                          refresh(() => category = value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Ngày giao dịch',
+                          prefixIcon: Icon(Icons.calendar_today_outlined),
+                        ),
+                        child: InkWell(
+                          onTap: () async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: date,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                              helpText: 'Chọn ngày giao dịch',
+                              cancelText: 'Hủy',
+                              confirmText: 'Chọn',
+                            );
+                            if (selectedDate != null) {
+                              refresh(() => date = selectedDate);
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${date.day.toString().padLeft(2, '0')}/'
+                                  '${date.month.toString().padLeft(2, '0')}/'
+                                  '${date.year}',
+                                ),
+                              ),
+                              const Icon(
+                                Icons.edit_calendar_outlined,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: note,
+                        minLines: 1,
+                        maxLines: 3,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: const InputDecoration(
+                          labelText: 'Ghi chú (không bắt buộc)',
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1628,22 +1730,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () {
-                      final n = double.tryParse(
-                        amount.text.replaceAll('.', '').replaceAll(',', ''),
-                      );
-                      if (title.text.trim().isEmpty ||
-                          n == null ||
-                          !n.isFinite ||
-                          n <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Nhập tên và số tiền hợp lệ lớn hơn 0',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
+                      if (!formKey.currentState!.validate()) return;
                       Navigator.pop(context, true);
                     },
                     child: const Text('Lưu giao dịch'),
@@ -1655,31 +1742,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
-    if (saved == true && mounted)
-    {
+    if (saved == true && mounted) {
+      final parsedAmount = parseAmount(amount.text)!;
       setState(() {
-        if (entry == null)
-        {
+        if (entry == null) {
           entries.add(
             MoneyEntry(
               title: title.text.trim(),
-              amount: double.parse(
-                amount.text.replaceAll('.', '').replaceAll(',', ''),
-              ),
-              category: category,
+              amount: parsedAmount,
+              category: category!,
               type: type,
-              date: DateTime.now(),
+              date: date,
               note: note.text.trim(),
             ),
           );
-        }
-        else {
+        } else {
           entry.title = title.text.trim();
-          entry.amount = double.parse(
-            amount.text.replaceAll('.', '').replaceAll(',', ''),
-          );
-          entry.category = category;
+          entry.amount = parsedAmount;
+          entry.category = category!;
           entry.type = type;
+          entry.date = date;
           entry.note = note.text.trim();
         }
       });
