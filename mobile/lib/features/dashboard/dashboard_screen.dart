@@ -1541,6 +1541,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
     final note = TextEditingController(text: entry?.note ?? '');
     var type = entry?.type ?? FlowType.expense;
+    // The demo category list uses "Lương" for income and the rest for expenses.
     List<String> categoriesForType() => categories
         .where(
           (value) =>
@@ -1632,6 +1633,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           signed: false,
                         ),
                         inputFormatters: [
+                          // Keep input digit-only, while allowing an empty field during editing.
                           TextInputFormatter.withFunction(
                             (oldValue, newValue) =>
                                 RegExp(r'^\d*$').hasMatch(newValue.text)
